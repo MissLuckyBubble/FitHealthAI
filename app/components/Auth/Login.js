@@ -10,10 +10,14 @@ import {
 import { styles } from "../../../styles/styles";
 import useFetch from "../../../hooks/useFetch";
 import { useAuth } from "../../../context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../../../styles/colors";
 
 const Login = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
   const { data, isLoading, error, fetchData, status } = useFetch();
   const { login } = useAuth();
 
@@ -30,9 +34,6 @@ const Login = ({ navigation }) => {
     };
 
     await fetchData(endpoint, "POST", params, null);
-
-    console.log("Login Status:", status);
-    console.log("Login Data:", data);
 
     if (status === 200) {
       login(data);
@@ -61,13 +62,25 @@ const Login = ({ navigation }) => {
         value={username}
         onChangeText={setUsername}
       />
-      <TextInput
-        placeholder="Password"
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.inputWithButton}>
+        <TextInput
+          placeholder="Password"
+          style={[{ flex: 1 }]}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!isPasswordVisible}
+        />
+        <TouchableOpacity
+          onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+        >
+          <Ionicons
+            name={isPasswordVisible ? "eye-off" : "eye"}
+            size={24}
+            color={colors.primary}
+            style={{ padding: 10 }}
+          />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>

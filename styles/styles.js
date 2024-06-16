@@ -21,7 +21,7 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: colors.primary,
+    color: colors.textPrimary,
     marginBottom: 20,
     textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: -1, height: 1 },
@@ -64,7 +64,7 @@ export const styles = StyleSheet.create({
   },
   buttonText: {
     color: colors.backgroundLight,
-    fontSize: 24,
+    fontSize: 16,
     fontWeight: "bold",
   },
   inputWithButton: {
@@ -102,8 +102,8 @@ export const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 16,
   },
-  placeholder: {
-    color: colors.primary,
-    fontSize: 16,
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
   },
 });

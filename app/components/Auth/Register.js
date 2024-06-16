@@ -10,16 +10,16 @@ import {
 } from "react-native";
 import { styles } from "../../../styles/styles";
 import useFetch from "../../../hooks/useFetch";
-import { Ionicons } from "@expo/vector-icons"; // Install expo icons if not already done: expo install @expo/vector-icons
-import { colors } from "../../../styles/colors";
+import { Ionicons } from "@expo/vector-icons";
 import MultipleChoicePicker from "../MultipleChoicePicker";
 import SingleChoicePicker from "../SingleChoicePicker";
 import { dietaryOptions, healthOptions, genderOptions } from "./options";
+import { colors } from "../../../styles/colors";
 
 const Register = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setconfirmPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [weightKG, setWeightKG] = useState("");
   const [goalWeight, setGoalWeight] = useState("");
@@ -29,18 +29,20 @@ const Register = ({ navigation }) => {
   const [healthConditions, setHealthConditions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [currentSelection, setCurrentSelection] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
+    useState(false);
 
-  const { data, isLoading, error, refetch } = useFetch("users", "POST", {
-    username,
-    password,
-    birthDate,
-    weightKG: parseFloat(weightKG),
-    goalWeight: parseFloat(goalWeight),
-    heightCM: parseFloat(heightCM),
-    gender,
-    dietaryPreferences,
-    healthConditions,
-  });
+  const [usernameError, setUsernameError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [confirmPasswordError, setconfirmPasswordError] = useState(false);
+  const [birthDateError, setBirthDateError] = useState(false);
+  const [weightKGError, setWeightKGError] = useState(false);
+  const [goalWeightError, setGoalWeightError] = useState(false);
+  const [heightCMError, setHeightCMError] = useState(false);
+  const [genderError, setGenderError] = useState(false);
+
+  const { data, isLoading, error, fetchData, status } = useFetch();
 
   const handleSelect = (item) => {
     if (currentSelection === "gender") {
@@ -63,27 +65,100 @@ const Register = ({ navigation }) => {
   };
 
   const handleRegister = async () => {
-    if (!username || !password) {
-      Alert.alert("Error", "Username and password are required!");
+    let isValid = true;
+
+    if (!username) {
+      setUsernameError(true);
+      isValid = false;
+    } else {
+      setUsernameError(false);
+    }
+
+    if (!password) {
+      setPasswordError(true);
+      isValid = false;
+    } else {
+      setPasswordError(false);
+    }
+
+    if (password !== confirmPassword) {
+      setconfirmPasswordError(true);
+      isValid = false;
+    } else {
+      setconfirmPasswordError(false);
+    }
+
+    if (!birthDate) {
+      setBirthDateError(true);
+      isValid = false;
+    } else {
+      setBirthDateError(false);
+    }
+
+    if (!weightKG) {
+      setWeightKGError(true);
+      isValid = false;
+    } else {
+      setWeightKGError(false);
+    }
+
+    if (!goalWeight) {
+      setGoalWeightError(true);
+      isValid = false;
+    } else {
+      setGoalWeightError(false);
+    }
+
+    if (!heightCM) {
+      setHeightCMError(true);
+      isValid = false;
+    } else {
+      setHeightCMError(false);
+    }
+
+    if (!gender) {
+      setGenderError(true);
+      isValid = false;
+    } else {
+      setGenderError(false);
+    }
+
+    if (!isValid) {
+      Alert.alert("Error", "Please fill all the required fields correctly!");
       return;
     }
 
-    try {
-      await refetch();
-      if (data.message === "User created successfully") {
-        Alert.alert(
-          "Registration Successful",
-          "You have registered successfully!"
-        );
-        navigation.navigate("Login");
-      } else {
-        Alert.alert(
-          "Registration Failed",
-          "Please check your input and try again."
-        );
-      }
-    } catch (error) {
-      Alert.alert("Error", "Something went wrong. Please try again later.");
+    const endpoint = "users";
+    const body = {
+      username: username,
+      password: password,
+      birthDate: birthDate,
+      weightKG: weightKG,
+      goalWeight: goalWeight,
+      heightCM: heightCM,
+      gender: gender,
+      dietaryPreferences: dietaryPreferences,
+      healthConditions: healthConditions,
+    };
+
+    await fetchData(endpoint, "POST", null, body);
+    if (status === 200) {
+      Alert.alert(
+        "Successful Register",
+        "You created your account successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              navigation.navigate("Login");
+            },
+          },
+        ]
+      );
+    } else if (status === 500 && error === "User already exists!") {
+      Alert.alert("Register Failed", "This username already exists");
+    } else {
+      Alert.alert("Register Failed", "An unexpected error occurred.");
     }
   };
 
@@ -95,57 +170,143 @@ const Register = ({ navigation }) => {
           style={styles.logo}
         />
         <Text style={styles.title}>Register</Text>
+        {usernameError && (
+          <Text style={styles.errorText}>* Username is required</Text>
+        )}
         <TextInput
           placeholder="Username"
-          style={styles.input}
+          style={[
+            styles.input,
+            usernameError ? { borderColor: colors.error } : {},
+          ]}
           value={username}
           onChangeText={setUsername}
         />
-        <TextInput
-          placeholder="Password"
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TextInput
-          placeholder="Confirm Password"
-          style={styles.input}
-          value={confirmPassword}
-          onChangeText={confirmPassword}
-          secureTextEntry
-        />
+        {passwordError && (
+          <Text style={styles.errorText}>* Password is required</Text>
+        )}
+        <View
+          style={[
+            styles.inputWithButton,
+            passwordError ? { borderColor: colors.error } : {},
+          ]}
+        >
+          <TextInput
+            placeholder="Password"
+            style={[{ flex: 1 }]}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!isPasswordVisible}
+          />
+          <TouchableOpacity
+            onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          >
+            <Ionicons
+              name={isPasswordVisible ? "eye-off" : "eye"}
+              size={24}
+              color={colors.primary}
+              style={{ padding: 10 }}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {confirmPasswordError && (
+          <Text style={styles.errorText}>* Passwords do not match</Text>
+        )}
+        <View
+          style={[
+            styles.inputWithButton,
+            confirmPasswordError || passwordError
+              ? { borderColor: colors.error }
+              : {},
+          ]}
+        >
+          <TextInput
+            placeholder="Confirm Password"
+            style={[{ flex: 1 }]}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!isConfirmPasswordVisible}
+          />
+          <TouchableOpacity
+            onPress={() =>
+              setIsConfirmPasswordVisible(!isConfirmPasswordVisible)
+            }
+          >
+            <Ionicons
+              name={isConfirmPasswordVisible ? "eye-off" : "eye"}
+              size={24}
+              color={colors.primary}
+              style={{ padding: 10 }}
+            />
+          </TouchableOpacity>
+        </View>
+        {birthDateError && (
+          <Text style={styles.errorText}>* Birth Date is required</Text>
+        )}
         <TextInput
           placeholder="Birth Date (YYYY-MM-DD)"
-          style={styles.input}
+          style={[
+            styles.input,
+            birthDateError ? { borderColor: colors.error } : {},
+          ]}
           value={birthDate}
           onChangeText={setBirthDate}
         />
+        {weightKGError && (
+          <Text style={styles.errorText}>* Weight is required</Text>
+        )}
         <TextInput
           placeholder="Weight (KG)"
-          style={styles.input}
+          style={[
+            styles.input,
+            weightKGError ? { borderColor: colors.error } : {},
+          ]}
           value={weightKG}
           onChangeText={setWeightKG}
           keyboardType="numeric"
         />
+        {goalWeightError && (
+          <Text style={styles.errorText}>* Goal Weight is required</Text>
+        )}
         <TextInput
           placeholder="Goal Weight (KG)"
-          style={styles.input}
+          style={[
+            styles.input,
+            goalWeightError ? { borderColor: colors.error } : {},
+          ]}
           value={goalWeight}
           onChangeText={setGoalWeight}
           keyboardType="numeric"
         />
+        {heightCMError && (
+          <Text style={styles.errorText}>* Height is required</Text>
+        )}
         <TextInput
           placeholder="Height (CM)"
-          style={styles.input}
+          style={[
+            styles.input,
+            heightCMError ? { borderColor: colors.error } : {},
+          ]}
           value={heightCM}
           onChangeText={setHeightCM}
           keyboardType="numeric"
         />
-        <View style={styles.inputWithButton}>
+        {genderError && (
+          <Text style={styles.errorText}>* Gender is required</Text>
+        )}
+        <View
+          style={[
+            styles.inputWithButton,
+            genderError ? { borderColor: colors.error } : {},
+          ]}
+        >
           <TextInput
             placeholder="Gender"
-            style={[{ flex: 1 }]}
+            style={[
+              { flex: 1 },
+              genderError ? { borderColor: colors.error } : {},
+            ]}
             value={genderOptions.find((opt) => opt.value === gender)?.label}
             editable={false}
           />
