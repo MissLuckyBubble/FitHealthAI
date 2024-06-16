@@ -12,6 +12,8 @@ const useFetch = () => {
   const fetchData = async (endpoint, method, params = null, body = null) => {
     setIsLoading(true);
     try {
+      console.log('fetchData'); 
+      
       const configuration = {
         method: method,
         url: endpoint,
@@ -21,16 +23,16 @@ const useFetch = () => {
       };
 
       const response = await axios.request(configuration);
-      console.log('Response:', response); // Log the entire response
+      console.log('Response:', response); 
       setStatus(response.status);
       setData(response.data);
     } catch (error) {
       if (error.response) {
-        console.log('Error Response:', error.response); // Log the error response
+        console.log('Error Response:', error.response); 
         setError(error.response.data);
         setStatus(error.response.status);
       } else {
-        console.log('Error:', error.message); // Log the error message
+        console.log('Error:', error.message); 
         setError(error.message);
         setStatus(500);
       }

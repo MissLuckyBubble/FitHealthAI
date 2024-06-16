@@ -1,16 +1,16 @@
-import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import FoodItems from '../components/Main/FoodItems';
-import Recipes from '../components/Main/Recipes';
+import React from "react";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import FoodItems from "../components/Main/FoodItems";
+import Recipes from "../components/Main/Recipes";
 
-const MainStack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
 
 const MainNavigator = () => {
   return (
-    <MainStack.Navigator initialRouteName="FoodItems">
-      <MainStack.Screen name="FoodItems" component={FoodItems} />
-      <MainStack.Screen name="Recipes" component={Recipes} />
-    </MainStack.Navigator>
+    <Drawer.Navigator initialRouteName="FoodItems">
+      <Drawer.Screen name="FoodItems" component={FoodItems} />
+      <Drawer.Screen name="Recipes" component={Recipes} />
+    </Drawer.Navigator>
   );
 };
 
