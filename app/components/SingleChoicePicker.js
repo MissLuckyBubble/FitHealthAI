@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, FlatList, Modal } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  Image,
+} from "react-native";
 import { modalStyles } from "../../styles/modalStyles";
 import { colors } from "../../styles/colors";
 
@@ -16,10 +23,16 @@ const SingleChoicePicker = ({
       <TouchableOpacity
         style={[
           modalStyles.modalItem,
-          isSelected ? { backgroundColor: colors.secondary } : {},
+          isSelected
+            ? {
+                backgroundColor: colors.backgroundLight,
+                borderColor: colors.primary,
+              }
+            : {},
         ]}
         onPress={() => handleSelect(item)}
       >
+        <Image source={item.image} style={modalStyles.icon} />
         <Text style={modalStyles.modalItemText}>{item.label}</Text>
       </TouchableOpacity>
     );
