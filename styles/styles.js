@@ -8,10 +8,15 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.backgroundLight,
     padding: 30,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
   },
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 0,
+    paddingHorizontal: 30,
+    paddingBottom: 40,
+    backgroundColor: colors.backgroundLight,
   },
   logo: {
     width: 150,
@@ -63,7 +68,7 @@ export const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: {
-    color: colors.backgroundLight,
+    color: colors.backgroundWhite,
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -78,7 +83,7 @@ export const styles = StyleSheet.create({
     borderRadius: 25,
     marginBottom: 15,
     paddingLeft: 15,
-    backgroundColor: "#FFF",
+    backgroundColor: colors.backgroundWhite,
     width: "100%",
     shadowColor: "#000",
     shadowOffset: {
@@ -105,5 +110,97 @@ export const styles = StyleSheet.create({
   errorText: {
     color: colors.error,
     fontSize: 12,
+  },
+
+  pickerButton: {
+    height: 50,
+    borderColor: colors.primary,
+    borderWidth: 1,
+    borderRadius: 25,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    backgroundColor: "#FFF",
+    width: "100%",
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2.62,
+    elevation: 4,
+    alignContent: "center",
+    justifyContent: "center",
+  },
+
+  pickerButtonText: {
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+
+  ingredientInputGroup: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+
+  inputSmall: {
+    flex: 1,
+    height: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+  },
+
+  pickerButtonHalf: {
+    flex: 2,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: colors.backgroundWhite,
+    justifyContent: "center",
+  },
+
+  ingredientList: {
+    marginTop: 16,
+    gap: 5,
+  },
+
+  ingredientCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
+    borderRadius: 18,
+    padding: 10,
+    marginBottom: 8,
+    flexDirection: "row",
+    width: "280",
+  },
+
+  ingredientText: {
+    fontSize: 14,
+    color: colors.primary,
+  },
+
+  removeText: {
+    fontSize: 18,
+    color: colors.error,
+    paddingHorizontal: 8,
+  },
+
+  clearButton: {
+    backgroundColor: colors.error,
+    borderRadius: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    alignItems: "center",
   },
 });
