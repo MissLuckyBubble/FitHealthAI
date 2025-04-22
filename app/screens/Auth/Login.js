@@ -12,6 +12,7 @@ import useFetch from "../../../hooks/useFetch";
 import { useAuth } from "../../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../styles/colors";
+import Loader from "../../components/Loader";
 
 const Login = ({ navigation }) => {
   const [username, setUsername] = useState("");
@@ -27,26 +28,25 @@ const Login = ({ navigation }) => {
       return;
     }
 
-    const endpoint = "users/login";
-    const params = {
+    const endpoint = "auth/login";
+    const body = {
       username: username,
       password: password,
     };
 
-    await fetchData(endpoint, "POST", params, null);
+    const { data, status, error } = await fetchData(
+      endpoint,
+      "POST",
+      null,
+      body
+    );
 
     if (status === 200) {
       login(data);
-      Alert.alert("Login Successful", "You have logged in successfully!", [
-        {
-          text: "OK",
-          onPress: () => {
-            navigation.navigate("Recipes");
-          },
-        },
-      ]);
     } else if (status === 401) {
       Alert.alert("Login Failed", "Incorrect username or password.");
+    } else if (error) {
+      Alert.alert("Login Failed", error);
     } else {
       Alert.alert("Login Failed", "An unexpected error occurred.");
     }
@@ -61,6 +61,7 @@ const Login = ({ navigation }) => {
         style={styles.input}
         value={username}
         onChangeText={setUsername}
+        editable={!isLoading}
       />
       <View style={styles.inputWithButton}>
         <TextInput
@@ -69,9 +70,11 @@ const Login = ({ navigation }) => {
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!isPasswordVisible}
+          editable={!isLoading}
         />
         <TouchableOpacity
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          disabled={isLoading}
         >
           <Ionicons
             name={isPasswordVisible ? "eye-off" : "eye"}
@@ -82,12 +85,17 @@ const Login = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? <Loader /> : <Text style={styles.buttonText}>Login</Text>}
       </TouchableOpacity>
       <TouchableOpacity
         style={{ padding: 10, alignItems: "center" }}
         onPress={() => navigation.navigate("Register")}
+        disabled={isLoading}
       >
         <Text style={{ color: "#1E3A5F" }}>
           Don't have an account? Register
