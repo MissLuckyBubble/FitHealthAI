@@ -11,6 +11,7 @@ import SearchAndFilterBar from "../../components/SearchAndFilterBar";
 import { useAuth } from "../../../context/AuthContext";
 import { useCallback } from "react";
 import { format } from "date-fns";
+import Toast from "react-native-toast-message";
 
 const tabs = ["All", "My Meals", "My Recipes", "My Foods"];
 
@@ -20,8 +21,6 @@ const FoodListScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState("All");
   const [itemModal, setItemModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-
-  const [query, setQuery] = useState("");
 
   const [filters, setFilters] = useState({
     dietaryPreferences: [],
@@ -73,10 +72,20 @@ const FoodListScreen = ({ navigation }) => {
       visibility: "Public",
     };
 
-    if (activeTab === "My Meals") {
-      await fetchData("meals/search", "POST", null, filtersToSend);
-    } else {
-      await fetchData("meal-components/search", "POST", null, filtersToSend);
+    try {
+      if (activeTab === "My Meals") {
+        await fetchData("meals/search", "POST", null, filtersToSend);
+      } else {
+        await fetchData("meal-components/search", "POST", null, filtersToSend);
+      }
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to fetch food list.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -92,8 +101,6 @@ const FoodListScreen = ({ navigation }) => {
       />
 
       <SearchAndFilterBar
-        query={query}
-        setQuery={setQuery}
         filters={filters}
         setFilters={setFilters}
         onSearch={handleFetch}
@@ -134,6 +141,7 @@ const FoodListScreen = ({ navigation }) => {
         <NutritionalCardList
           data={data || []}
           onSelect={(item) => {
+            console.log(item);
             setSelectedItem(item);
             setItemModalVisible(true);
           }}
@@ -143,8 +151,14 @@ const FoodListScreen = ({ navigation }) => {
       <NutritionalModal
         visible={itemModal}
         onClose={() => setItemModalVisible(false)}
-        data={selectedItem}
-        type={activeTab === "Recipes" ? "recipe" : "food-item"}
+        id={selectedItem?.id}
+        type={
+          activeTab === "My Meals"
+            ? "MEAL"
+            : selectedItem?.ingredients?.length > 0
+            ? "RECIPE"
+            : "FOOD_ITEM"
+        }
         date={route.params?.date ?? format(new Date(), "yyyy-MM-dd")}
         selectedMeal={selectedMeal}
         viewOnly={false}

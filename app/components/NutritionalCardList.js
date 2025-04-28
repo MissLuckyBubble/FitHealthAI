@@ -13,8 +13,9 @@ import {
 } from "../../assets/options";
 import { colors } from "../../styles/colors";
 import { useAuth } from "../../context/AuthContext";
+import { ActivityIndicator } from "react-native";
 
-const NutritionalCardList = ({ data, onSelect }) => {
+const NutritionalCardList = ({ data, onSelect, isLoading }) => {
   const { user } = useAuth().user;
   const getDietary = (val) =>
     dietaryOptions.find((o) => o.value === val)?.label || val;
@@ -87,6 +88,14 @@ const NutritionalCardList = ({ data, onSelect }) => {
       </View>
     </TouchableOpacity>
   );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size={"large"} color={colors.accent} />
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -163,5 +172,11 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: 12,
     color: "#1f2937",
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.backgroundWhite,
   },
 });

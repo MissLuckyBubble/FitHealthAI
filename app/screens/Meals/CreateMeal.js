@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { mealTypesOptions } from "../../../assets/options";
 import MultipleChoicePicker from "../../components/MultipleChoicePicker";
 import FoodItemSelectorModal from "../../components/FoodItemSelectorModal";
+import Toast from "react-native-toast-message";
 
 const CreateMeal = ({ navigation }) => {
   const { isLoading, fetchData } = useFetch();
@@ -35,7 +36,13 @@ const CreateMeal = ({ navigation }) => {
 
   const handleAddMealItem = (foodItem, quantity, unit) => {
     if (!foodItem || !quantity || !unit) {
-      Alert.alert("Error", "Please select component, quantity, and unit.");
+      Toast.show({
+        type: "error",
+        text1: "Missing Data",
+        text2: "Please fill in all required fields.",
+        position: "bottom",
+      });
+
       return;
     }
 
@@ -53,7 +60,13 @@ const CreateMeal = ({ navigation }) => {
   const saveMeal = async () => {
     if (!validateFields()) {
       setInvalidFields(true);
-      Alert.alert("Missing Data", "Please fill in all required fields.");
+      Toast.show({
+        type: "error",
+        text1: "Missing Data",
+        text2: "Please fill in all required fields.",
+        position: "bottom",
+      });
+
       return;
     }
 
@@ -75,10 +88,21 @@ const CreateMeal = ({ navigation }) => {
       setRecipeTypes([]);
       setMealItems([]);
       setInvalidFields(false);
-      Alert.alert("Success", "Meal created successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Meal created successfully!",
+        position: "bottom",
+      });
+
       navigation.navigate("Foods");
     } else {
-      Alert.alert("Error", error || "Failed to create meal");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error || "Failed to create meal",
+        position: "bottom",
+      });
     }
   };
 

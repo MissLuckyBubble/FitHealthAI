@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   Text,
@@ -15,31 +15,54 @@ import IngredientDetailsModal from "./IngredientDetailsModal";
 import { useAuth } from "../../context/AuthContext";
 import useFetch from "../../hooks/useFetch";
 import Loader from "./Loader";
+import PreferenceButtons from "./PreferenceButtons";
+import Toast from "react-native-toast-message";
 
 const NutritionalModal = ({
   visible,
   onClose,
-  data,
-  date,
-  selectedMeal,
+  type,
+  id,
   viewOnly = true,
-  type = "",
+  selectedMeal,
+  date,
   onDelete,
   onCopyToDiary,
   navigation,
-  loading,
+  loading: externalLoading = false,
 }) => {
   const { user } = useAuth().user;
-  const { dataFromFetch, isLoading, error, fetchData, status } = useFetch();
-  const [saving, setSaving] = useState(false);
+  const { data: fetchedData, isLoading: fetchLoading, fetchData } = useFetch();
+  const [localData, setLocalData] = useState(null);
 
   const [selectedIngredient, setSelectedIngredient] = useState(null);
-  const [showTooltip, setShowTooltip] = useState(false);
-
   const [showIngredientDetailsModal, setShowIngredientDetailsModal] =
     useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleAddToDairyPress = () => {
+  const isLoading = fetchLoading || saving || externalLoading;
+
+  useEffect(() => {
+    console.log("id:", id);
+    console.log("type: ", type);
+    if (id && type) {
+      let endpoint = "";
+      if (type === "FOOD_ITEM") endpoint = `food-items/${id}`;
+      else if (type === "RECIPE") endpoint = `recipes/${id}`;
+      else if (type === "MEAL") endpoint = `meals/${id}`;
+      else if (type === "MEAL_PLAN") endpoint = `meal-plans/${id}`;
+      else if (type == "COMPONENT") endpoint = `meal-components/${id}`;
+      else console.error("Unsupported type:", type);
+
+      fetchData(endpoint, "GET", null).then((response) => {
+        if (response?.data) {
+          setLocalData(response.data);
+        }
+      });
+    }
+  }, [visible, id, type]);
+
+  const handleAddToDiary = () => {
     if (!selectedMeal) {
       Alert.alert(
         "No Meal Selected",
@@ -48,36 +71,48 @@ const NutritionalModal = ({
       );
       return;
     }
-    console.log("date: ", date);
     setShowIngredientDetailsModal(true);
   };
 
   const handleSave = async ({ quantity, unit }) => {
     setSaving(true);
     setShowIngredientDetailsModal(false);
-
-    const isMeal = !!data.mealItems?.length;
-    const isRecipe = !!data.ingredients?.length;
-
+    const isMeal = !!localData?.mealItems?.length;
+    const isRecipe = !!localData?.ingredients?.length;
+    onClose();
     const dto = {
-      mealId: isMeal ? data.id : null,
+      mealId: isMeal ? localData.id : null,
       mealName: `${user.username}'s ${date} ${selectedMeal}`,
-      componentId: !isMeal ? data.id : null,
+      componentId: !isMeal ? localData.id : null,
       componentType: isMeal ? null : isRecipe ? "RECIPE" : "FOOD_ITEM",
       quantity: parseFloat(quantity),
-      unit: unit,
+      unit,
       recipeType: selectedMeal,
-      date: date,
+      date,
     };
-    console.log("DTO: ", dto);
-    await fetchData("diary-entries/assign-meal", "POST", null, dto);
-    console.log("status: ", status);
-    onClose();
-
+    const { status } = await fetchData(
+      "diary-entries/assign-meal",
+      "POST",
+      null,
+      dto
+    );
     setSaving(false);
+    if (status === 200 || status === 201) {
+      Toast.show({
+        type: "success",
+        text1: "Added to Diary!",
+        text2: "Meal successfully added.",
+      });
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to add meal to diary.",
+      });
+    }
   };
 
-  if (!data) return null;
+  if (!visible) return null;
 
   return (
     <>
@@ -88,206 +123,198 @@ const NutritionalModal = ({
         onRequestClose={onClose}
       >
         <Pressable style={styles.modalOverlay} onPress={onClose}>
-          <Pressable style={styles.modalContainer} onPress={() => {}}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <NutritionalInfoCard
-                data={data}
-                showTooltip={showTooltip}
-                onPressVerifiedIcon={() => setShowTooltip(!showTooltip)}
-                showInfo={type != "meal-plan"}
-              />
-
-              {data.ingredients?.length > 0 && (
-                <>
-                  <Text style={styles.sectionTitle}>Ingredients</Text>
-                  {data.ingredients.map((i, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => setSelectedIngredient(i.foodItem)}
-                      style={styles.itemStyle}
-                    >
-                      <Text style={styles.ingredientText}>
-                        {i.foodItem?.name ?? "Unknown"} — {i.quantity} {i.unit}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </>
-              )}
-
-              {data.mealItems?.length > 0 && (
-                <>
-                  <Text style={styles.sectionTitle}>Meal Items</Text>
-                  {data.mealItems.map((i, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => setSelectedIngredient(i.component)}
-                      style={styles.itemStyle}
-                    >
-                      <Text style={styles.ingredientText}>
-                        {i.component?.name ?? "Unknown"} — {i.quantity} {i.unit}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </>
-              )}
-
-              {type === "meal-plan" && (
-                <>
-                  <Text style={styles.sectionTitle}>Meals</Text>
-                  {["breakfast", "lunch", "dinner", "snack"].map((slot) => {
-                    const meal = data?.[slot];
-                    if (!meal) return null;
-
-                    return (
+          <Pressable style={styles.modalContainer}>
+            {isLoading || !localData ? (
+              <Loader />
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <NutritionalInfoCard
+                  data={localData}
+                  showInfo={type !== "MEAL_PLAN"}
+                />
+                {localData.ingredients?.length > 0 && (
+                  <>
+                    <Text style={styles.sectionTitle}>Ingredients</Text>
+                    {localData.ingredients.map((i, index) => (
                       <TouchableOpacity
-                        key={slot}
+                        key={index}
+                        onPress={() =>
+                          setSelectedIngredient({
+                            id: i.foodItem.id,
+                            type: "FOOD_ITEM",
+                          })
+                        }
                         style={styles.itemStyle}
-                        onPress={() => setSelectedIngredient(meal)}
                       >
                         <Text style={styles.ingredientText}>
-                          {slot.charAt(0).toUpperCase() + slot.slice(1)}:{" "}
-                          {meal.name}
+                          {i.foodItem?.name ?? "Unknown"} — {i.quantity}{" "}
+                          {i.unit}
                         </Text>
                       </TouchableOpacity>
-                    );
-                  })}
-                </>
-              )}
+                    ))}
+                  </>
+                )}
 
-              {!viewOnly && (
-                <TouchableOpacity
-                  style={[
-                    styles.modalCloseButton,
-                    { backgroundColor: colors.primary },
-                  ]}
-                  onPress={() => handleAddToDairyPress()}
-                >
-                  <Text
-                    style={[
-                      styles.modalCloseText,
-                      {
-                        paddingHorizontal: 20,
-                        alignSelf: "center",
-                        color: "#fff",
-                      },
-                    ]}
-                  >
-                    Add to Diary
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              <IngredientDetailsModal
-                visible={showIngredientDetailsModal}
-                foodItem={data}
-                onSave={handleSave}
-                onCancel={() => setShowIngredientDetailsModal(false)}
-                title="Add to Dairy"
-                isMeal={!!data.mealItems?.length}
-              />
-
-              {type === "meal-plan" && (
-                <>
-                  {user.id === data.owner.id && (
-                    <View style={styles.row}>
+                {/* Meal Items */}
+                {localData.mealItems?.length > 0 && (
+                  <>
+                    <Text style={styles.sectionTitle}>Meal Items</Text>
+                    {localData.mealItems.map((i, index) => (
                       <TouchableOpacity
-                        style={[
-                          styles.modalCloseButton,
-                          { backgroundColor: colors.accent, width: "45%" },
-                        ]}
-                        onPress={() => {
-                          onClose();
-                          navigation.navigate("Create Meal Plan", {
-                            editMealPlan: data,
-                          });
-                        }}
+                        key={index}
+                        onPress={() =>
+                          setSelectedIngredient({
+                            id: i.component.id,
+                            type: i.componentType,
+                          })
+                        }
+                        style={styles.itemStyle}
                       >
-                        <Text
-                          style={[styles.modalCloseText, { color: "#fff" }]}
-                        >
-                          Edit
+                        <Text style={styles.ingredientText}>
+                          {i.component?.name ?? "Unknown"} — {i.quantity}{" "}
+                          {i.unit}
                         </Text>
                       </TouchableOpacity>
+                    ))}
+                  </>
+                )}
 
-                      <TouchableOpacity
-                        style={[
-                          styles.modalCloseButton,
-                          { backgroundColor: colors.error, width: "45%" },
-                        ]}
-                        onPress={async () => {
-                          const confirm = await new Promise((res) => {
-                            Alert.alert("Confirm Delete", "Are you sure?", [
-                              {
-                                text: "Cancel",
-                                style: "cancel",
-                                onPress: () => res(false),
-                              },
-                              {
-                                text: "Delete",
-                                style: "destructive",
-                                onPress: () => res(true),
-                              },
-                            ]);
-                          });
-                          if (confirm) {
-                            onDelete(data.id);
-                          }
-                        }}
-                      >
-                        <Text
-                          style={[styles.modalCloseText, { color: "#fff" }]}
-                        >
-                          Delete
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                {/* MealPlan Meals */}
+                {type === "MEAL_PLAN" && (
+                  <>
+                    <Text style={styles.sectionTitle}>Meals</Text>
+                    {["breakfast", "lunch", "dinner", "snack"].map(
+                      (mealSlot) => {
+                        const meal = localData?.[mealSlot];
+                        if (!meal) return null;
+                        return (
+                          <TouchableOpacity
+                            key={mealSlot}
+                            style={styles.itemStyle}
+                            onPress={() =>
+                              setSelectedIngredient({
+                                id: meal.id,
+                                type: "MEAL",
+                              })
+                            }
+                          >
+                            <Text style={styles.ingredientText}>
+                              {mealSlot.charAt(0).toUpperCase() +
+                                mealSlot.slice(1)}
+                              : {meal.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      }
+                    )}
+                  </>
+                )}
 
+                {/* Preference Buttons */}
+                {localData?.id && (
+                  <PreferenceButtons itemId={localData.id} itemType={type} />
+                )}
+
+                {/* Add to Diary */}
+                {!viewOnly && (
                   <TouchableOpacity
                     style={[
                       styles.modalCloseButton,
                       { backgroundColor: colors.primary },
                     ]}
-                    onPress={() => {
-                      onCopyToDiary(data.id);
-                    }}
+                    onPress={handleAddToDiary}
+                  >
+                    <Text style={[styles.modalCloseText, { color: "#fff" }]}>
+                      Add to Diary
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Edit / Delete for MealPlan */}
+                {type === "MEAL_PLAN" && user?.id === localData?.owner?.id && (
+                  <View style={styles.row}>
+                    <TouchableOpacity
+                      style={[
+                        styles.modalCloseButton,
+                        { backgroundColor: colors.accent, width: "45%" },
+                      ]}
+                      onPress={() => {
+                        onClose();
+                        navigation.navigate("Create Meal Plan", {
+                          editMealPlan: localData,
+                        });
+                      }}
+                    >
+                      <Text style={[styles.modalCloseText, { color: "#fff" }]}>
+                        Edit
+                      </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.modalCloseButton,
+                        { backgroundColor: colors.error, width: "45%" },
+                      ]}
+                      onPress={() => onDelete(localData.id)}
+                    >
+                      <Text style={[styles.modalCloseText, { color: "#fff" }]}>
+                        Delete
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Copy to Diary */}
+                {type === "MEAL_PLAN" && (
+                  <TouchableOpacity
+                    style={[
+                      styles.modalCloseButton,
+                      { backgroundColor: colors.primary },
+                    ]}
+                    onPress={() => onCopyToDiary(localData.id)}
                   >
                     <Text style={[styles.modalCloseText, { color: "#fff" }]}>
                       Copy to Diary
                     </Text>
                   </TouchableOpacity>
-                </>
-              )}
+                )}
 
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={onClose}
-              >
-                <Text
-                  style={[
-                    styles.modalCloseText,
-                    { paddingHorizontal: 20, alignSelf: "center" },
-                  ]}
+                {/* Close Button */}
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={onClose}
                 >
-                  Close
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
+                  <Text style={styles.modalCloseText}>Close</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
           </Pressable>
         </Pressable>
-        {(isLoading || loading) && (
-          <View style={styles.loadingOverlay}>
-            <Loader />
-          </View>
-        )}
+
+        <IngredientDetailsModal
+          visible={showIngredientDetailsModal}
+          foodItem={localData}
+          onSave={handleSave}
+          onCancel={() => setShowIngredientDetailsModal(false)}
+          title="Add to Diary"
+          isMeal={!!localData?.mealItems?.length}
+        />
       </Modal>
 
-      <NutritionalModal
-        visible={!!selectedIngredient}
-        onClose={() => setSelectedIngredient(null)}
-        data={selectedIngredient}
-        type="FoodItem"
-      />
+      {selectedIngredient && (
+        <NutritionalModal
+          visible={!!selectedIngredient}
+          onClose={() => setSelectedIngredient(null)}
+          type={
+            type == "MEAL_PLAN"
+              ? "MEAL"
+              : selectedIngredient?.ingredients?.length > 0
+              ? "RECIPE"
+              : "FOOD_ITEM"
+          }
+          id={selectedIngredient.id}
+        />
+      )}
     </>
   );
 };

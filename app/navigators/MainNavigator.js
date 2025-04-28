@@ -37,7 +37,7 @@ const CustomDrawerContent = (props) => {
           <TouchableOpacity onPress={handleProfileClick}>
             <Image source={profilePic} style={styles.profilePicture} />
           </TouchableOpacity>
-          <Text style={styles.username}>{user.user.username}</Text>
+          <Text style={styles.username}>{user?.user?.username}</Text>
         </View>
       )}
       <DrawerItemList {...props} />

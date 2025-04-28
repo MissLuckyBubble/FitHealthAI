@@ -14,6 +14,7 @@ import { unitOptions } from "../../assets/options";
 import NutritionalInfoCard from "./NutritionalInfoCard";
 import SingleChoicePicker from "./SingleChoicePicker";
 import NutritionalModal from "./NutritionalModal";
+import { Pressable, ScrollView } from "react-native-gesture-handler";
 
 const IngredientDetailsModal = ({
   visible,
@@ -31,28 +32,18 @@ const IngredientDetailsModal = ({
 
   const handleAccept = () => {
     if (!quantity && !isMealPlan) {
-      Alert.alert(
-        "Missing Information",
-        "Please enter a quantity",
-        [{ text: "OK" }],
-        { cancelable: false }
-      );
+      Alert.alert("Missing Information", "Please enter a quantity");
       return;
     }
     if (!isMeal && !unit) {
-      Alert.alert(
-        "Missing Information",
-        "Please select a unit",
-        [{ text: "OK" }],
-        { cancelable: false }
-      );
+      Alert.alert("Missing Information", "Please select a unit");
       return;
     }
+
     onSave({
       quantity: parseFloat(quantity),
       unit: isMeal ? "Serving" : unit,
     });
-
     setQuantity("");
     setUnit("");
   };
@@ -69,79 +60,93 @@ const IngredientDetailsModal = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleClose}>
-            <Ionicons name="close" size={28} color={colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.title}>{title}</Text>
-          <TouchableOpacity onPress={handleAccept}>
-            <Ionicons name="checkmark" size={28} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.inputs}>
-          {!isMealPlan && (
-            <TextInput
-              style={styles.input}
-              placeholder="Quantity"
-              value={quantity}
-              onChangeText={setQuantity}
-              keyboardType="numeric"
-            />
-          )}
-          {!isMeal && (
-            <TouchableOpacity
-              style={styles.input}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={styles.unitText}>
-                {unit ? unit : "Select a Unit"}
-              </Text>
-              <SingleChoicePicker
-                options={unitOptions}
-                modalVisible={modalVisible}
-                setModalVisible={setModalVisible}
-                handleSelect={handleSelectUnit}
-                selectedValue={unit}
-              />
+    <Modal
+      visible={visible}
+      animationType="slide"
+      onRequestClose={handleClose}
+      transparent={true}
+    >
+      <Pressable style={styles.modalOverlay}>
+        <ScrollView style={styles.modalContainer}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleClose}>
+              <Ionicons name="close" size={28} color={colors.primary} />
             </TouchableOpacity>
-          )}
-        </View>
-        <NutritionalInfoCard data={foodItem} />
-
-        {foodItem?.mealItems?.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Meal Items</Text>
-            {foodItem.mealItems.map((i, index) => (
+            <Text style={styles.title}>{title}</Text>
+            <TouchableOpacity onPress={handleAccept}>
+              <Ionicons name="checkmark" size={28} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.inputs}>
+            {!isMealPlan && (
+              <TextInput
+                style={styles.input}
+                placeholder="Quantity"
+                value={quantity}
+                onChangeText={setQuantity}
+                keyboardType="numeric"
+              />
+            )}
+            {!isMeal && (
               <TouchableOpacity
-                key={index}
-                onPress={() => setSelectedIngredient(i.component)}
-                style={styles.itemStyle}
+                style={styles.input}
+                onPress={() => setModalVisible(true)}
               >
-                <Text style={styles.ingredientText}>
-                  {i.component?.name ?? "Unknown"} — {i.quantity} {i.unit}
+                <Text style={styles.unitText}>
+                  {unit ? unit : "Select a Unit"}
                 </Text>
+                <SingleChoicePicker
+                  options={unitOptions}
+                  modalVisible={modalVisible}
+                  setModalVisible={setModalVisible}
+                  handleSelect={handleSelectUnit}
+                  selectedValue={unit}
+                />
               </TouchableOpacity>
-            ))}
-          </>
-        )}
-        <NutritionalModal
-          visible={!!selectedIngredient}
-          onClose={() => setSelectedIngredient(null)}
-          data={selectedIngredient}
-          type="FoodItem"
-        />
-      </View>
+            )}
+          </View>
+          <NutritionalInfoCard data={foodItem} />
+
+          {foodItem?.mealItems?.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Meal Items</Text>
+              {foodItem.mealItems.map((i, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => setSelectedIngredient(i.component)}
+                  style={styles.itemStyle}
+                >
+                  <Text style={styles.ingredientText}>
+                    {i.component?.name ?? "Unknown"} — {i.quantity} {i.unit}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </>
+          )}
+          <NutritionalModal
+            visible={!!selectedIngredient}
+            onClose={() => setSelectedIngredient(null)}
+            data={selectedIngredient}
+            type="FoodItem"
+          />
+        </ScrollView>
+      </Pressable>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: colors.backgroundWhite,
-    padding: 16,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 20,
+    maxHeight: "90%",
   },
   header: {
     flexDirection: "row",

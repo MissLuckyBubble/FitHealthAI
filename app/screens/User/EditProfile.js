@@ -24,6 +24,7 @@ import {
   genderOptions,
 } from "../../../assets/options";
 import { colors } from "../../../styles/colors";
+import Toast from "react-native-toast-message";
 
 const EditProfileScreen = ({ navigation }) => {
   const { user, login } = useAuth();
@@ -43,7 +44,12 @@ const EditProfileScreen = ({ navigation }) => {
     if (status === 200) {
       setEnums(data);
     } else if (error) {
-      Alert.alert("Error", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error || "Failed to load data.",
+        position: "bottom",
+      });
     }
   }, [status, data, error]);
 
@@ -60,7 +66,6 @@ const EditProfileScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
-    console.log("Form Data: ", formData);
     const endpoint = `users/${formData.id}`;
     const { id, password, role, dailyCalorieGoal, ...cleanedFormData } =
       formData;
@@ -69,18 +74,26 @@ const EditProfileScreen = ({ navigation }) => {
     });
 
     if (status === 200) {
-      const updatedUser = {
-        ...user,
-        user: data,
-      };
+      const updatedUser = { ...user, user: data };
       try {
         await login(updatedUser);
+        Toast.show({
+          type: "success",
+          text1: "Profile Updated",
+          text2: "Your changes have been saved successfully!",
+          position: "bottom",
+        });
+        navigation.navigate("User Profile");
       } catch (err) {
         console.log("Error saving user:", err);
       }
-      navigation.navigate("User Profile");
     } else if (error) {
-      Alert.alert("Error", error);
+      Toast.show({
+        type: "error",
+        text1: "Update Failed",
+        text2: error || "Something went wrong.",
+        position: "bottom",
+      });
     }
   };
 

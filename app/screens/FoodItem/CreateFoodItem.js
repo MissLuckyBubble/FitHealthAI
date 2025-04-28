@@ -16,6 +16,7 @@ import useFetch from "../../../hooks/useFetch";
 import SingleChoicePicker from "../../components/SingleChoicePicker";
 import { colors } from "../../../styles/colors";
 import { allergenOptions, allergens } from "../../../assets/options";
+import Toast from "react-native-toast-message";
 
 const CreateFoodItem = ({ navigator }) => {
   const { isLoading, fetchData } = useFetch();
@@ -43,7 +44,13 @@ const CreateFoodItem = ({ navigator }) => {
 
   const createFoodItem = async () => {
     if (!validateFields()) {
-      Alert.alert("Missing Data", "Please fill in all fields.");
+      Toast.show({
+        type: "error",
+        text1: "Missing Data",
+        text2: "Please fill in all fields.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       setInvalidFields(true);
       return;
     }
@@ -69,7 +76,13 @@ const CreateFoodItem = ({ navigator }) => {
     );
 
     if (status === 201) {
-      Alert.alert("Success", "Food item created successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Food item created successfully!",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       setFoodName("");
       setCalories("");
       setFatContent("");
@@ -79,7 +92,13 @@ const CreateFoodItem = ({ navigator }) => {
       setSelectedAllergen("");
       navigator.navigate("Foods");
     } else {
-      Alert.alert("Error", error || "Failed to create food item");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error || "Failed to create food item",
+        position: "bottom",
+        visibilityTime: 4000,
+      });
     }
   };
 

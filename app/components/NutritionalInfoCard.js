@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { dietaryOptions, allergenOptions } from "../../assets/options";
@@ -13,14 +13,9 @@ const getDietaryIcon = (value) =>
 const getAllergenIcon = (value) =>
   allergenOptions.find((o) => o.label === value)?.image;
 
-const NutritionalInfoCard = ({
-  data,
-  onPressVerifiedIcon,
-  showTooltip,
-  showInfo = true,
-}) => {
+const NutritionalInfoCard = ({ data, showInfo = true }) => {
   if (!data) return null;
-
+  const [showTooltip, setShowTooltip] = useState(false);
   return (
     <View>
       <View style={styles.headerRow}>
@@ -36,7 +31,7 @@ const NutritionalInfoCard = ({
             </View>
 
             {data.verifiedByAdmin && (
-              <TouchableOpacity onPress={onPressVerifiedIcon}>
+              <TouchableOpacity onPress={() => setShowTooltip(!showTooltip)}>
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
@@ -161,13 +156,12 @@ const NutritionalInfoCard = ({
 export default NutritionalInfoCard;
 
 const styles = StyleSheet.create({
-  // 👇 Use the same styles from the original modal component
-  // You can import the styles if they're shared, or extract to a common file
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
+    position: "relative",
   },
   recipeTitle: {
     fontSize: 18,
@@ -188,11 +182,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
     padding: 8,
     borderRadius: 6,
-    top: 30,
-    right: 10,
-    zIndex: 10,
-    maxWidth: 200,
     position: "absolute",
+    top: 25,
+    right: 50,
+    zIndex: 999,
+    maxWidth: 250,
   },
   tooltipText: {
     color: "#fff",

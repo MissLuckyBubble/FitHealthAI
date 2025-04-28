@@ -18,6 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import FoodItemSelectorModal from "../../components/FoodItemSelectorModal";
 import MultipleChoicePicker from "../../components/MultipleChoicePicker";
 import { mealTypesOptions } from "../../../assets/options";
+import Toast from "react-native-toast-message";
 
 const CreateRecipe = ({ navigation }) => {
   const { isLoading, fetchData } = useFetch();
@@ -47,7 +48,12 @@ const CreateRecipe = ({ navigation }) => {
   const saveRecipe = async () => {
     if (!validateFields()) {
       setInvalidFields(true);
-      Alert.alert("Missing Data", "Please fill in all required fields.");
+      Toast.show({
+        type: "error",
+        text1: "Missing Data",
+        text2: "Please fill in all required fields.",
+        position: "bottom",
+      });
       return;
     }
 
@@ -57,7 +63,7 @@ const CreateRecipe = ({ navigation }) => {
       preparationTime: parseFloat(preparationTime),
       cookingTime: parseFloat(cookingTime),
       servingSize: parseFloat(servingSize),
-      recipeTypes: [],
+      recipeTypes,
       ingredients: ingredients.map((ingredient) => ({
         foodItem: ingredient.foodItem.id,
         quantity: ingredient.quantity,
@@ -80,18 +86,35 @@ const CreateRecipe = ({ navigation }) => {
       setCookingTime("");
       setServingSize("");
       setIngredients([]);
+      setRecipeTypes([]);
       setInvalidFields(false);
       setShowFoodItemSelector(false);
-      Alert.alert("Success", "Recipe created successfully");
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Recipe created successfully!",
+        position: "bottom",
+      });
+
       navigation.navigate("Foods");
     } else {
-      Alert.alert("Error", error || "Failed to create recipe");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error || "Failed to create recipe",
+        position: "bottom",
+      });
     }
   };
-
-  handleaddIngredient = (foodItem, quantity, unit) => {
+  const handleaddIngredient = (foodItem, quantity, unit) => {
     if (!foodItem || !quantity || !unit) {
-      Alert.alert("Error", "Please select food item, quantity and unit.");
+      Toast.show({
+        type: "error",
+        text1: "Invalid Ingredient",
+        text2: "Please select food item, quantity and unit.",
+        position: "bottom",
+      });
       return;
     }
 

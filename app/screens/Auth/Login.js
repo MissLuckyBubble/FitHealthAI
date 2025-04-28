@@ -13,6 +13,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../styles/colors";
 import Loader from "../../components/Loader";
+import Toast from "react-native-toast-message";
 
 const Login = ({ navigation }) => {
   const [username, setUsername] = useState("");
@@ -24,7 +25,12 @@ const Login = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert("Error", "Username and password are required!");
+      Toast.show({
+        type: "error",
+        text1: "Username and password are required!",
+        position: "bottom",
+        visibilityTime: 2000,
+      });
       return;
     }
 
@@ -44,11 +50,29 @@ const Login = ({ navigation }) => {
     if (status === 200) {
       login(data);
     } else if (status === 401) {
-      Alert.alert("Login Failed", "Incorrect username or password.");
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: "Incorrect username or password.",
+        position: "bottom",
+        visibilityTime: 2000,
+      });
     } else if (error) {
-      Alert.alert("Login Failed", error);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: { error },
+        position: "bottom",
+        visibilityTime: 2000,
+      });
     } else {
-      Alert.alert("Login Failed", "An unexpected error occurred.");
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: "An unexpected error occurred.",
+        position: "bottom",
+        visibilityTime: 2000,
+      });
     }
   };
 

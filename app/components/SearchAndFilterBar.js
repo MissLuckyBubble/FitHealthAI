@@ -24,13 +24,7 @@ import { modalStyles } from "../../styles/modalStyles";
 const sortFields = ["calories", "protein", "likes", "date"];
 const sortDirections = ["asc", "desc"];
 
-const SearchAndFilterBar = ({
-  query,
-  setQuery,
-  filters,
-  setFilters,
-  onSearch,
-}) => {
+const SearchAndFilterBar = ({ filters, setFilters, onSearch }) => {
   const [filterVisible, setFilterVisible] = useState(false);
   const [showDietaryModal, setShowDietaryModal] = useState(false);
   const [showAllergenModal, setShowAllergenModal] = useState(false);
@@ -56,6 +50,7 @@ const SearchAndFilterBar = ({
 
   const clearFilters = () => {
     setFilters({
+      query: null,
       dietaryPreferences: [],
       allergens: [],
       conditionSuitability: [],
@@ -74,10 +69,11 @@ const SearchAndFilterBar = ({
         <TextInput
           style={styles.searchInput}
           placeholder="Search..."
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={onSearch}
+          value={filters.query}
+          onChangeText={(val) => setFilters({ ...filters, query: val })}
+          onSubmitEditing={() => onSearch(filters.query)}
         />
+
         <TouchableOpacity style={styles.button} onPress={onSearch}>
           <Text style={styles.buttonText}>Search</Text>
         </TouchableOpacity>

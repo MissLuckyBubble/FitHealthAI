@@ -13,6 +13,7 @@ import useFetch from "../../../hooks/useFetch";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../../styles/colors";
 import Loader from "../../components/Loader";
+import Toast from "react-native-toast-message";
 
 const Register = ({ navigation }) => {
   const [username, setUsername] = useState("");
@@ -53,7 +54,13 @@ const Register = ({ navigation }) => {
     }
 
     if (!isValid) {
-      Alert.alert("Error", "Please fill all the required fields correctly!");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please fill all required fields correctly!",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       return;
     }
 
@@ -71,15 +78,30 @@ const Register = ({ navigation }) => {
     );
 
     if (status === 201) {
-      Alert.alert("Success", "Account created successfully!", [
-        { text: "OK", onPress: () => navigation.navigate("Login") },
-      ]);
-    } else if (status === 400 && error === "Error: Username already exists") {
-      Alert.alert("Register Failed", "This username already exists");
+      Toast.show({
+        type: "success",
+        text1: "Account created successfully!",
+        text2: "You can now log in.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
+      navigation.navigate("Login");
+    } else if (status === 400) {
+      Toast.show({
+        type: "error",
+        text1: "Username already exists",
+        text2: "Please choose a different one.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
     } else {
-      console.log("Error:", error);
-      console.log("Status:", status);
-      Alert.alert("Register Failed", error || "An unexpected error occurred.");
+      Toast.show({
+        type: "error",
+        text1: "Registration Failed",
+        text2: error || "An unexpected error occurred.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
     }
   };
 

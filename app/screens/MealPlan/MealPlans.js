@@ -17,6 +17,7 @@ import SearchAndFilterBar from "../../components/SearchAndFilterBar";
 import { useAuth } from "../../../context/AuthContext";
 import { format } from "date-fns";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import Toast from "react-native-toast-message";
 
 const tabs = ["My Plans", "Explore"];
 
@@ -71,6 +72,13 @@ const MealPlansScreen = ({ navigation }) => {
   };
 
   const handleGeneratePress = async () => {
+    Toast.show({
+      type: "info",
+      text1: "Generating Meal Plan...",
+      text2: "Please wait while we create it!",
+      position: "bottom",
+    });
+
     setTimeout(async () => {
       const existingPlans = data.length;
 
@@ -81,9 +89,22 @@ const MealPlansScreen = ({ navigation }) => {
 
       if (status === 200) {
         startPollingMealPlans(existingPlans);
+
+        Toast.show({
+          type: "success",
+          text1: "Meal Plan Generation Started!",
+          text2: "We will notify you when it's ready.",
+          position: "bottom",
+        });
       } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to start meal plan generation.",
+          position: "bottom",
+        });
       }
-    }, 300); // wait 300 milliseconds
+    }, 300);
   };
 
   const startPollingMealPlans = (existingCount) => {
@@ -95,11 +116,23 @@ const MealPlansScreen = ({ navigation }) => {
 
       if (data && data.length > existingCount) {
         clearInterval(pollingInterval);
+
+        Toast.show({
+          type: "success",
+          text1: "Meal Plan Ready!",
+          text2: "Check your list now.",
+          position: "bottom",
+        });
         await handleFetch();
       }
 
       if (pollingCount > 5) {
-        // after 10 tries (50 seconds)
+        Toast.show({
+          type: "info",
+          text1: "Meal Plan is still being generated",
+          text2: "Please check back again shortly!",
+          position: "bottom",
+        });
         clearInterval(pollingInterval);
       }
     }, 10000);

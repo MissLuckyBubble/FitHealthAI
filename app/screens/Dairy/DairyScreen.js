@@ -23,6 +23,7 @@ import NutritionalInfoCard from "../../components/NutritionalInfoCard";
 import { ScrollView } from "react-native-gesture-handler";
 import { useFocusEffect } from "@react-navigation/native";
 import Loader from "../../components/Loader";
+import Toast from "react-native-toast-message";
 
 const DiaryScreen = ({ navigation, route }) => {
   const passedDate = route.params?.date;
@@ -77,17 +78,29 @@ const DiaryScreen = ({ navigation, route }) => {
 
   const handleDelete = async (item) => {
     setIsLoading(true);
-    console.log("isLoading ", isLoading);
     const { status, data, error } = await fetchData(
       `diary-entries/mealItem/${item.id}`,
       "DELETE"
     );
     if (status === 200) {
       loadDiaryEntry(currentDate);
+      Toast.show({
+        type: "success",
+        text1: "Deleted!",
+        text2: "Meal item removed successfully.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
     } else {
       console.error("Error deleting meal item:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error || "Failed to delete item.",
+        position: "bottom",
+        visibilityTime: 4000,
+      });
     }
-    console.log("isLoading ", isLoading);
     setIsLoading(false);
   };
 
@@ -132,12 +145,7 @@ const DiaryScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          <NutritionalInfoCard
-            data={diaryEntry}
-            showTooltip={showTooltip}
-            onPressVerifiedIcon={() => setShowTooltip(!showTooltip)}
-            showInfo={false}
-          />
+          <NutritionalInfoCard data={diaryEntry} showInfo={false} />
         </View>
         {isLoadingDiary ? (
           <Loader />

@@ -20,6 +20,7 @@ import SingleChoicePicker from "../../components/SingleChoicePicker";
 import { visibilityOptions } from "../../../assets/options";
 import { styles } from "../../../styles/styles";
 import { Ionicons } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
 
 const CreateMealPlanScreen = ({ navigation, route }) => {
   const { user } = useAuth().user;
@@ -57,19 +58,25 @@ const CreateMealPlanScreen = ({ navigation, route }) => {
     const hMeal =
       mealPlan.breakfast || mealPlan.lunch || mealPlan.dinner || mealPlan.snack;
     setNameError(nError);
-
     setHasMealError(!hMeal);
 
     if (nError) {
-      Alert.alert("Validation Error", "Meal Plan name is required.");
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Meal Plan name is required.",
+        position: "bottom",
+      });
       return;
     }
 
     if (!hMeal) {
-      Alert.alert(
-        "Validation Error",
-        "Please add at least one meal to the plan."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Validation Error",
+        text2: "Please add at least one meal.",
+        position: "bottom",
+      });
       return;
     }
 
@@ -82,18 +89,27 @@ const CreateMealPlanScreen = ({ navigation, route }) => {
       visibility: mealPlan.visibility,
     };
 
-    console.log(body);
     const url = editMealPlan ? `meal-plans/${mealPlan.id}` : "meal-plans";
     const method = editMealPlan ? "PUT" : "POST";
 
     const { status } = await fetchData(url, method, null, body);
 
     if (status === 200 || status === 201) {
+      Toast.show({
+        type: "success",
+        text1: "Success!",
+        text2: editMealPlan ? "Meal Plan updated." : "Meal Plan created.",
+        position: "bottom",
+      });
       handleClearAll();
       navigation.navigate("Meal Plans");
     } else {
-      console.log(status);
-      alert("Failed to save meal plan");
+      Toast.show({
+        type: "error",
+        text1: "Save Failed",
+        text2: "Something went wrong.",
+        position: "bottom",
+      });
     }
   };
 
