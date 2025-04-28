@@ -5,10 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Platform,
+  Image,
 } from "react-native";
 import NutritionalCardList from "../../components/NutritionalCardList";
-import Loader from "../../components/Loader";
 import useFetch from "../../../hooks/useFetch";
 import { colors } from "../../../styles/colors";
 import NutritionalModal from "../../components/NutritionalModal";
@@ -49,10 +48,7 @@ const MealPlansScreen = ({ navigation }) => {
   const handleFetch = async () => {
     const filtersToSend = {
       ...filters,
-      minCalories: filters.caloriesRange[0],
-      maxCalories: filters.caloriesRange[1],
-      minProtein: filters.proteinRange[0],
-      maxProtein: filters.proteinRange[1],
+
       ownerId: activeTab === "My Plans" ? user.id : null,
       visibility: activeTab === "Explore" ? "Public" : null,
     };
@@ -74,8 +70,42 @@ const MealPlansScreen = ({ navigation }) => {
     navigation.navigate("Create Meal Plan");
   };
 
+  const handleGeneratePress = async () => {
+    setTimeout(async () => {
+      const existingPlans = data.length;
+
+      const { status } = await fetchData("meal-plans/generate", "POST", null, {
+        recipeTypes: ["breakfast", "lunch", "dinner", "snack"],
+        days: 1,
+      });
+
+      if (status === 200) {
+        startPollingMealPlans(existingPlans);
+      } else {
+      }
+    }, 300); // wait 300 milliseconds
+  };
+
+  const startPollingMealPlans = (existingCount) => {
+    let pollingCount = 0;
+    const pollingInterval = setInterval(async () => {
+      pollingCount++;
+
+      const { data } = await fetchData("meal-plans", "GET");
+
+      if (data && data.length > existingCount) {
+        clearInterval(pollingInterval);
+        await handleFetch();
+      }
+
+      if (pollingCount > 5) {
+        // after 10 tries (50 seconds)
+        clearInterval(pollingInterval);
+      }
+    }, 10000);
+  };
+
   const onDelete = async (id) => {
-    setIsSaving(true);
     const { status } = await fetchData(`meal-plans/${id}`, "DELETE");
     if (status === 200 || status === 204) {
       setSelectedMealPlan(null);
@@ -84,7 +114,6 @@ const MealPlansScreen = ({ navigation }) => {
     } else {
       Alert.alert("Error", "Failed to delete Meal Plan.");
     }
-    setIsSaving(false);
   };
 
   const onCopyToDiary = async (mealPlanId) => {
@@ -146,6 +175,14 @@ const MealPlansScreen = ({ navigation }) => {
           <TouchableOpacity style={styles.card} onPress={handleCreatePress}>
             <Text>Create New Meal Plan</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.card} onPress={handleGeneratePress}>
+            <Image
+              source={require("../../../assets/generated.png")}
+              style={styles.icon}
+            />
+            <Text>Generate Meal Plan</Text>
+          </TouchableOpacity>
         </View>
       )}
       {activeTab === "Explore" && (
@@ -158,23 +195,20 @@ const MealPlansScreen = ({ navigation }) => {
         />
       )}
 
-      {isLoading || isSaving ? (
-        <Loader />
-      ) : (
-        <NutritionalCardList
-          data={data || []}
-          onSelect={(item) => {
-            setSelectedMealPlan(item);
-            setModalVisible(true);
-          }}
-        />
-      )}
+      <NutritionalCardList
+        data={data || []}
+        onSelect={(item) => {
+          setSelectedMealPlan(item);
+          setModalVisible(true);
+        }}
+        isLoading={isLoading}
+      />
 
       <NutritionalModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        data={selectedMealPlan}
-        type="meal-plan"
+        type="MEAL_PLAN"
+        id={selectedMealPlan?.id}
         viewOnly={true}
         date={format(new Date(), "yyyy-MM-dd")}
         onDelete={(id) => onDelete(id)}
@@ -246,5 +280,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
     elevation: 3,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
   },
 });
