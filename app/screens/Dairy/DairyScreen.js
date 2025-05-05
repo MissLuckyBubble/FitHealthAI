@@ -24,6 +24,8 @@ import { ScrollView } from "react-native-gesture-handler";
 import { useFocusEffect } from "@react-navigation/native";
 import Loader from "../../components/Loader";
 import Toast from "react-native-toast-message";
+import NutritionPieChart from "../../components/NutritionPieChart";
+import { Ionicons } from "@expo/vector-icons";
 
 const DiaryScreen = ({ navigation, route }) => {
   const passedDate = route.params?.date;
@@ -39,6 +41,8 @@ const DiaryScreen = ({ navigation, route }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingDiary, setIsLoadingDiary] = useState(false);
+
+  const [showChart, setShowChart] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -144,8 +148,35 @@ const DiaryScreen = ({ navigation, route }) => {
               <Text style={styles.calLabel}>Remaining</Text>
             </View>
           </View>
-
-          <NutritionalInfoCard data={diaryEntry} showInfo={false} />
+          <View style={styles.chooseChartOrInfoBar}>
+            <Text style={styles.chooseChartOrInfoBarText}>
+              Calorie Breakdown
+            </Text>
+            <View style={styles.icons}>
+              <TouchableOpacity
+                style={{ marginRight: 10 }}
+                onPress={() => setShowChart(true)}
+              >
+                <Ionicons
+                  name={showChart ? "pie-chart" : "pie-chart-outline"}
+                  size={24}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowChart(false)}>
+                <Ionicons
+                  name={!showChart ? "menu" : "menu-outline"}
+                  size={24}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          {!showChart ? (
+            <NutritionalInfoCard data={diaryEntry} showInfo={false} />
+          ) : (
+            <NutritionPieChart data={diaryEntry} />
+          )}
         </View>
         {isLoadingDiary ? (
           <Loader />
@@ -267,5 +298,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: colors.textSecondary,
+  },
+  chooseChartOrInfoBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    backgroundColor: colors.backgroundLight,
+    width: "110%",
+    padding: 10,
+  },
+  chooseChartOrInfoBarText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: colors.textPrimary,
+  },
+  icons: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

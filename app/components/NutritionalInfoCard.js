@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   bigCalories: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1f2937",
+    color: colors.primary,
   },
   macroRow: {
     flexDirection: "row",
